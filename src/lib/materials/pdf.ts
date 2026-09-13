@@ -42,6 +42,10 @@ export async function extractPdfText(
       disableFontFace: true,
     }).promise;
   } catch (error) {
+    logger.warn("pdf_extract_failed", {
+      bytes: data.length,
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw new AppError(
       "BAD_REQUEST",
       `This file could not be opened as a PDF: ${error instanceof Error ? error.message : String(error)}`,

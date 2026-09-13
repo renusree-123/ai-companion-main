@@ -78,18 +78,12 @@ class VercelBlobStorage implements StorageAdapter {
 
   async get(key: string): Promise<Buffer> {
     try {
-      const res = await get(key, { access: "public" });
+      const res = await get(key, { access: "public", useCache: false });
       if (!res || res.statusCode !== 200 || !res.stream) {
         throw new AppError("NOT_FOUND", `[vercel-blob] Stored object ${key} is missing.`);
       }
-      const chunks: Uint8Array[] = [];
-      const reader = res.stream.getReader();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) chunks.push(value);
-      }
-      return Buffer.concat(chunks);
+      const arrayBuffer = await new Response(res.stream).arrayBuffer();
+      return Buffer.from(arrayBuffer);
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(
