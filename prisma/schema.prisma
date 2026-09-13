@@ -46,6 +46,7 @@ model User {
   activity        ActivityEvent[]
   dailyStats      UserDailyStat[]
   hubArtifacts    HubArtifact[]
+  flashcards      Flashcard[]
 
   @@index([role])
   @@index([lastActiveAt])
@@ -108,6 +109,7 @@ model Project {
   recommendations Recommendation[]
   activity        ActivityEvent[]
   dailyStats      ProjectDailyStat[]
+  flashcards      Flashcard[]
 
   @@index([userId, lastAccessedAt])
   @@index([spaceId, createdAt])
@@ -414,6 +416,38 @@ model QuizAnswer {
 
   @@index([quizId, answeredAt])
   @@index([userId, answeredAt])
+}
+
+// ---------------------------------------------------------------------------
+// Flashcards
+// ---------------------------------------------------------------------------
+
+model Flashcard {
+  id        String @id @default(cuid())
+  projectId String
+  userId    String
+
+  front     String // question / term
+  back      String // answer / definition
+  hint      String @default("")
+
+  // status: NEW | LEARNING | KNOWN
+  status      String @default("NEW")
+  reviewCount Int    @default(0)
+  correctCount Int   @default(0)
+
+  // optional concept linkage
+  conceptId String?
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  lastReviewedAt DateTime?
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@index([userId, createdAt])
 }
 
 // ---------------------------------------------------------------------------

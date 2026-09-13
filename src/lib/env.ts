@@ -21,8 +21,8 @@ const schema = z.object({
   GROQ_API_KEY: z.string().optional(),
   AI_PROVIDER: z.enum(["auto", "groq", "offline"]).default("auto"),
   /** Default high-performance Groq models. */
-  AI_MODEL: z.string().default("groq/compound"),
-  AI_FALLBACK_MODEL: z.string().default("groq/compound-mini"),
+  AI_MODEL: z.string().default("compound-beta"),
+  AI_FALLBACK_MODEL: z.string().default("compound-beta-mini"),
   /**
    * Whether a live-provider failure may be answered by the deterministic
    * offline provider.
