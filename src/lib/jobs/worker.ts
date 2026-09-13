@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { env } from "../env";
 import { logger, newTraceId } from "../logger";
 import { errorMessage, isRetryable } from "../errors";
@@ -198,4 +199,29 @@ export function startInProcessWorker(): Worker | null {
 
 export function getWorker(): Worker | null {
   return globalForWorker.ascWorker ?? null;
+}
+
+/**
+ * Triggers an immediate worker drain in the background.
+ *
+ * On serverless platforms like Vercel where long-running polling loops get
+ * frozen, this uses Next.js `after()` (or unhandled promise resolution) to
+ * process queued jobs asynchronously before the serverless instance terminates.
+ */
+export function triggerBackgroundDrain(): void {
+  const runDrain = async () => {
+    try {
+      const worker = new Worker();
+      await worker.drain();
+    } catch (error) {
+      logger.error("background_drain_failed", { error });
+    }
+  };
+
+  try {
+    after(runDrain);
+  } catch {
+    // Outside Next.js request context (e.g. tests or standalone CLI)
+    runDrain().catch(() => {});
+  }
 }

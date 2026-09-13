@@ -13,6 +13,7 @@ import { upsertContextItem, decayContext } from "../domain/learning-context";
 import { maybeSummariseConversation } from "../domain/tutor";
 import { dispatchPendingEvents } from "../events/dispatcher";
 import { enqueue, dedupeKeyFor, reportProgress, type JobType } from "./queue";
+import { triggerBackgroundDrain } from "./worker";
 
 /**
  * Job handlers.
@@ -289,7 +290,7 @@ export const handlers: Record<JobType, Handler> = {
 
 /** Convenience wrapper used by request handlers to kick off background work. */
 export async function scheduleAfterUpload(materialId: string, userId: string, projectId: string) {
-  return enqueue({
+  const job = await enqueue({
     type: "material.process",
     payload: { materialId },
     // One processing job per material, ever, unless it reaches a terminal state.
@@ -299,6 +300,9 @@ export async function scheduleAfterUpload(materialId: string, userId: string, pr
     priority: 2,
     maxAttempts: 3,
   });
+
+  triggerBackgroundDrain();
+  return job;
 }
 
 export function newJobTraceId(): string {

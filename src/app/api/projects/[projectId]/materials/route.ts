@@ -9,6 +9,7 @@ import { looksLikePdf } from "@/lib/materials/pdf";
 import { recordActivity } from "@/lib/activity";
 import { publish } from "@/lib/events/bus";
 import { scheduleAfterUpload } from "@/lib/jobs/handlers";
+import { triggerBackgroundDrain } from "@/lib/jobs/worker";
 import { logger } from "@/lib/logger";
 
 type Params = { params: Promise<{ projectId: string }> };
@@ -37,6 +38,11 @@ export const GET = handler(async (_request: Request, { params }: Params) => {
       processedAt: true,
     },
   });
+
+  if (materials.some((m) => m.status === "QUEUED")) {
+    triggerBackgroundDrain();
+  }
+
   return ok(materials);
 });
 
