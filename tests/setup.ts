@@ -48,15 +48,11 @@ if (schemaContent.includes('provider = "postgresql"')) {
   }
 }
 
-const dbPushedFlag = path.join(TEST_DIR, ".db-pushed");
-if (!existsSync(dbPushedFlag)) {
-  try {
-    execSync(`npx prisma db push --schema="${testSchemaPath}" --skip-generate --accept-data-loss`, {
-      stdio: "pipe",
-      env: process.env,
-    });
-    writeFileSync(dbPushedFlag, "ok", "utf-8");
-  } catch {
-    // Ignore if another parallel thread pushed it
-  }
+try {
+  execSync(`npx prisma db push --schema="${testSchemaPath}" --skip-generate --accept-data-loss`, {
+    stdio: "pipe",
+    env: process.env,
+  });
+} catch {
+  // Ignore
 }

@@ -4,6 +4,7 @@ import { handler, ok } from "@/lib/http";
 import { requireUser } from "@/lib/auth/session";
 import { assertMaterialAccess } from "@/lib/auth/ownership";
 import { enqueue, dedupeKeyFor } from "@/lib/jobs/queue";
+import { triggerBackgroundDrain } from "@/lib/jobs/worker";
 
 type Params = { params: Promise<{ materialId: string }> };
 
@@ -34,6 +35,8 @@ export const POST = handler(async (_request: Request, { params }: Params) => {
     projectId: material.projectId,
     priority: 2,
   });
+
+  triggerBackgroundDrain();
 
   return ok({ queued: true, jobId });
 });

@@ -200,6 +200,30 @@ export async function processMaterial(
     logger.error("concept_extraction_failed", { materialId, error });
   }
 
+  // Ensure every processed document has at least one concept so adaptive quizzes always have targets.
+  const existingConcepts = await db.concept.count({ where: { projectId: material.projectId } });
+  if (existingConcepts === 0) {
+    const fallbackName =
+      material.filename.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9\s]/g, " ").trim() ||
+      "Core Concepts";
+    const slug = slugify(fallbackName) || "core-concepts";
+    await db.concept.upsert({
+      where: { projectId_slug: { projectId: material.projectId, slug } },
+      create: {
+        projectId: material.projectId,
+        name: fallbackName,
+        slug,
+        description: `Key knowledge and topics covered in ${material.filename}`,
+        importance: 0.8,
+        sourceCount: 1,
+      },
+      update: {
+        description: `Key knowledge and topics covered in ${material.filename}`,
+      },
+    }).catch(() => {});
+    await linkChunksToConcepts(material.projectId, materialId).catch(() => {});
+  }
+
   await advance("EXTRACTING_KNOWLEDGE", 88);
 
   let summary = "";
