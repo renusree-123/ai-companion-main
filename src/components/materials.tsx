@@ -110,15 +110,45 @@ export function MaterialsPanel({
 
   async function remove(id: string, filename: string) {
     if (!confirm(`Remove "${filename}"? Its extracted knowledge will be deleted too.`)) return;
-    await fetch(`/api/materials/${id}`, { method: "DELETE" });
-    await refresh();
-    router.refresh();
+    setError(null);
+    try {
+      const response = await fetch(`/api/materials/${id}`, { method: "DELETE" });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        const msg =
+          body?.error?.devMessage ??
+          body?.error?.message ??
+          `Could not remove "${filename}" (HTTP ${response.status}).`;
+        setError(msg);
+        await refresh();
+        return;
+      }
+      setMaterials((prev) => prev.filter((m) => m.id !== id));
+      await refresh();
+      router.refresh();
+    } catch (err) {
+      setError(`Failed to remove "${filename}": ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   async function reprocess(id: string) {
-    await fetch(`/api/materials/${id}/reprocess`, { method: "POST" });
-    settledRef.current = false;
-    await refresh();
+    setError(null);
+    try {
+      const response = await fetch(`/api/materials/${id}/reprocess`, { method: "POST" });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        const msg =
+          body?.error?.devMessage ??
+          body?.error?.message ??
+          `Could not retry processing (HTTP ${response.status}).`;
+        setError(msg);
+        return;
+      }
+      settledRef.current = false;
+      await refresh();
+    } catch (err) {
+      setError(`Failed to retry material: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   return (
