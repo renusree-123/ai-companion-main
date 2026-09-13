@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI Study Companion",
+  title: "StudyMate",
   description:
     "An AI-powered learning and growth workspace: organise materials, learn with a grounded tutor, take adaptive quizzes, and track concept mastery over time.",
 };

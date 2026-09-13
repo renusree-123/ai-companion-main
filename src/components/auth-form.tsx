@@ -87,7 +87,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           🎓
         </div>
         <div style={{ fontSize: 22, fontWeight: 680, letterSpacing: "-0.025em" }}>
-          AI Study Companion
+          StudyMate
         </div>
         <p style={{ margin: "5px 0 0", fontSize: 13, color: "var(--text-muted)" }}>
           Learn from your own materials, and see how you are progressing.

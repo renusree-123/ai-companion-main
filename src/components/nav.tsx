@@ -58,7 +58,7 @@ export function Nav({
         }}
       >
         <Link href="/" style={{ fontWeight: 680, fontSize: 14.5, letterSpacing: "-0.02em", whiteSpace: "nowrap" }}>
-          AI Study Companion
+          StudyMate
         </Link>
 
         <nav style={{ display: "flex", gap: 2, flex: 1, overflowX: "auto" }}>
