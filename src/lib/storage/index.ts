@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { del, get, head, put } from "@vercel/blob";
 import { env } from "../env";
 import { AppError } from "../errors";
 
@@ -61,7 +62,65 @@ class LocalStorage implements StorageAdapter {
   }
 }
 
-let adapter: StorageAdapter = new LocalStorage();
+class VercelBlobStorage implements StorageAdapter {
+  readonly id = "vercel-blob";
+
+  async put(key: string, data: Buffer): Promise<void> {
+    await put(key, data, {
+      access: "public",
+      addRandomSuffix: false,
+    });
+  }
+
+  async get(key: string): Promise<Buffer> {
+    try {
+      const res = await get(key, { access: "public" });
+      if (!res || res.statusCode !== 200 || !res.stream) {
+        throw new AppError("NOT_FOUND", `Stored object ${key} is missing.`);
+      }
+      const chunks: Uint8Array[] = [];
+      const reader = res.stream.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) chunks.push(value);
+      }
+      return Buffer.concat(chunks);
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(
+        "NOT_FOUND",
+        `Stored object ${key} is missing: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  async delete(key: string): Promise<void> {
+    try {
+      await del(key);
+    } catch {
+      // Ignore deletion errors if blob doesn't exist
+    }
+  }
+
+  async exists(key: string): Promise<boolean> {
+    try {
+      const info = await head(key);
+      return Boolean(info);
+    } catch {
+      return false;
+    }
+  }
+}
+
+function selectDefaultAdapter(): StorageAdapter {
+  if (process.env.BLOB_READ_WRITE_TOKEN || process.env.STORAGE_PROVIDER === "vercel-blob") {
+    return new VercelBlobStorage();
+  }
+  return new LocalStorage();
+}
+
+let adapter: StorageAdapter = selectDefaultAdapter();
 
 export function storage(): StorageAdapter {
   return adapter;
