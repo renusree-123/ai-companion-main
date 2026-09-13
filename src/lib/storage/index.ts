@@ -44,7 +44,11 @@ class LocalStorage implements StorageAdapter {
     try {
       return await readFile(this.resolve(key));
     } catch {
-      throw new AppError("NOT_FOUND", `Stored object ${key} is missing.`);
+      const isVercel = Boolean(process.env.VERCEL);
+      const hint = isVercel
+        ? " (Running on Vercel with local-fs storage: BLOB_READ_WRITE_TOKEN environment variable is missing in Vercel settings)."
+        : ".";
+      throw new AppError("NOT_FOUND", `[local-fs] Stored object ${key} is missing${hint}`);
     }
   }
 
@@ -76,7 +80,7 @@ class VercelBlobStorage implements StorageAdapter {
     try {
       const res = await get(key, { access: "public" });
       if (!res || res.statusCode !== 200 || !res.stream) {
-        throw new AppError("NOT_FOUND", `Stored object ${key} is missing.`);
+        throw new AppError("NOT_FOUND", `[vercel-blob] Stored object ${key} is missing.`);
       }
       const chunks: Uint8Array[] = [];
       const reader = res.stream.getReader();
@@ -90,7 +94,7 @@ class VercelBlobStorage implements StorageAdapter {
       if (error instanceof AppError) throw error;
       throw new AppError(
         "NOT_FOUND",
-        `Stored object ${key} is missing: ${error instanceof Error ? error.message : String(error)}`,
+        `[vercel-blob] Stored object ${key} is missing: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -120,14 +124,14 @@ function selectDefaultAdapter(): StorageAdapter {
   return new LocalStorage();
 }
 
-let adapter: StorageAdapter = selectDefaultAdapter();
+let customAdapter: StorageAdapter | null = null;
 
 export function storage(): StorageAdapter {
-  return adapter;
+  return customAdapter ?? selectDefaultAdapter();
 }
 
 export function setStorageAdapter(next: StorageAdapter): void {
-  adapter = next;
+  customAdapter = next;
 }
 
 /**

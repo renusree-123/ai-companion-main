@@ -92,7 +92,13 @@ export function MaterialsPanel({
       });
       if (!response.ok) {
         const body = await response.json().catch(() => null);
-        setError(body?.error?.message ?? `Could not upload ${file.name}.`);
+        const msg =
+          body?.error?.devMessage ??
+          body?.error?.message ??
+          (response.status === 500
+            ? "Server error (500) while processing the PDF upload. Please check dev server logs."
+            : `Could not upload ${file.name} (HTTP ${response.status}).`);
+        setError(msg);
         break;
       }
     }

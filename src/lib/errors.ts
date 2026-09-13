@@ -66,7 +66,7 @@ export class AppError extends Error {
  */
 export function redactSecrets(text: string): string {
   let out = text.replace(/([?&](?:key|api_?key|access_token)=)[^&\s"'\\]+/gi, "$1[redacted]");
-  for (const name of ["GEMINI_API_KEY", "AUTH_SECRET", "DATABASE_URL"]) {
+  for (const name of ["GEMINI_API_KEY", "GROQ_API_KEY", "AUTH_SECRET", "DATABASE_URL"]) {
     const value = process.env[name];
     // Short values would match too much ordinary text to replace safely.
     if (value && value.length >= 12) out = out.split(value).join(`[redacted:${name}]`);
