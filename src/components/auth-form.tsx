@@ -4,19 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Alert, Button, Card, Field, inputStyle } from "./ui";
-
-const BRAND_STYLE = {
-  width: 46,
-  height: 46,
-  margin: "0 auto 12px",
-  borderRadius: 14,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: 21,
-  background: "linear-gradient(135deg, var(--accent), var(--accent-hover))",
-  boxShadow: "0 8px 24px -6px color-mix(in srgb, var(--accent) 60%, transparent)",
-} as const;
+import { LogoMark } from "./logo";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
@@ -83,10 +71,10 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   return (
     <>
       <div className="animate-in" style={{ textAlign: "center", marginBottom: 22 }}>
-        <div className="animate-pop" style={BRAND_STYLE}>
-          🎓
+        <div className="animate-pop" style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+          <LogoMark size={52} />
         </div>
-        <div style={{ fontSize: 22, fontWeight: 680, letterSpacing: "-0.025em" }}>
+        <div className="brand-text" style={{ fontSize: 26 }}>
           StudyMate
         </div>
         <p style={{ margin: "5px 0 0", fontSize: 13, color: "var(--text-muted)" }}>

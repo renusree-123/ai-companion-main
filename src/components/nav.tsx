@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { BrandLockup } from "./logo";
 
 const LINKS = [
   { href: "/", label: "Home", icon: "🏠", exact: true },
@@ -57,8 +58,8 @@ export function Nav({
           height: 54,
         }}
       >
-        <Link href="/" style={{ fontWeight: 680, fontSize: 14.5, letterSpacing: "-0.02em", whiteSpace: "nowrap" }}>
-          StudyMate
+        <Link href="/">
+          <BrandLockup size={32} textSize={19} />
         </Link>
 
         <nav style={{ display: "flex", gap: 2, flex: 1, overflowX: "auto" }}>

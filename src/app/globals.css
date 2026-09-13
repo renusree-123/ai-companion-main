@@ -369,6 +369,44 @@ select {
   animation: spin 0.7s linear infinite;
 }
 
+/* Brand mark + wordmark — used in the nav header and the auth screen. */
+.brand-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 30%;
+  background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 55%, #ec4899 100%);
+  box-shadow:
+    0 3px 10px color-mix(in srgb, var(--accent) 45%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 220ms ease;
+}
+
+.brand-mark:hover {
+  transform: rotate(-6deg) scale(1.07);
+  box-shadow:
+    0 6px 18px color-mix(in srgb, var(--accent) 55%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.brand-text {
+  font-weight: 760;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .brand-text {
+    background: linear-gradient(90deg, var(--accent) 0%, #ec4899 65%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+}
+
 /* Decorative floating gradient orbs behind the auth card. */
 .auth-orb {
   position: absolute;
