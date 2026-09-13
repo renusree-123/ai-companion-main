@@ -6,7 +6,7 @@
  * stale test database behind.
  */
 import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const TEST_DIR = path.resolve(process.cwd(), ".test-tmp");
@@ -33,7 +33,24 @@ env.GROQ_API_KEY = "";
 env.WORKER_IN_PROCESS = "false";
 env.LOG_LEVEL = "error";
 
-execSync("npx prisma db push --skip-generate --accept-data-loss", {
+const schemaPath = path.resolve(process.cwd(), "prisma/schema.prisma");
+const schemaContent = readFileSync(schemaPath, "utf-8");
+let testSchemaPath = schemaPath;
+
+if (schemaContent.includes('provider = "postgresql"')) {
+  testSchemaPath = path.join(TEST_DIR, "schema.sqlite.prisma");
+  if (!existsSync(testSchemaPath)) {
+    const sqliteSchema = schemaContent.replace('provider = "postgresql"', 'provider = "sqlite"');
+    writeFileSync(testSchemaPath, sqliteSchema, "utf-8");
+    try {
+      execSync(`npx prisma generate --schema="${testSchemaPath}"`, { stdio: "pipe" });
+    } catch {
+      // Ignore parallel generation error if another worker generated it
+    }
+  }
+}
+
+execSync(`npx prisma db push --schema="${testSchemaPath}" --skip-generate --accept-data-loss`, {
   stdio: "pipe",
   env: process.env,
 });
