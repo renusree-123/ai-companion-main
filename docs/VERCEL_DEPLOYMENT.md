@@ -47,6 +47,10 @@ In your Vercel Project Settings -> **Environment Variables**, add the following:
 | `AI_FALLBACK_MODEL` | `groq/compound-mini` | Fallback Groq model |
 | `AI_PROVIDER` | `groq` | Set to `groq` or `auto` |
 | `WORKER_IN_PROCESS` | `true` | Runs worker in web process |
+| `BLOB_READ_WRITE_TOKEN` | `vercel_blob_rw_...` | Vercel Blob storage read/write token (auto-created when connecting a Vercel Blob store) |
+
+> [!IMPORTANT]
+> **Vercel Blob Storage Requirement**: Because Vercel executes code in serverless functions with ephemeral disk storage (`/tmp`), files stored using local filesystem storage (`local-fs`) will not persist across requests or background jobs. You **must** create a Vercel Blob Store in the Vercel Dashboard under **Storage -> Create Database -> Blob** and connect it to your project, which automatically sets `BLOB_READ_WRITE_TOKEN`.
 
 ---
 
