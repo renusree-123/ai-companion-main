@@ -13,7 +13,7 @@ export const db =
     log: env().LOG_LEVEL === "debug" ? ["warn", "error", "query"] : ["warn", "error"],
   });
 
-if (env().NODE_ENV !== "production") globalForPrisma.prisma = db;
+globalForPrisma.prisma = db;
 
 /** Cheap liveness probe used by the admin System Health page. */
 export async function pingDatabase(): Promise<{ ok: boolean; latencyMs: number; error?: string }> {
