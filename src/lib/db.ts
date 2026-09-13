@@ -7,9 +7,33 @@ import { env } from "./env";
  */
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
+function configureDatasourceUrl(): string | undefined {
+  const url = process.env.DATABASE_URL;
+  if (!url || !url.startsWith("postgres")) return undefined;
+
+  try {
+    const parsed = new URL(url);
+    let modified = false;
+    if (!parsed.searchParams.has("connection_limit")) {
+      parsed.searchParams.set("connection_limit", "15");
+      modified = true;
+    }
+    if (!parsed.searchParams.has("pool_timeout")) {
+      parsed.searchParams.set("pool_timeout", "30");
+      modified = true;
+    }
+    return modified ? parsed.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+const datasourceUrl = configureDatasourceUrl();
+
 export const db =
   globalForPrisma.prisma ??
   new PrismaClient({
+    ...(datasourceUrl ? { datasourceUrl } : {}),
     log: env().LOG_LEVEL === "debug" ? ["warn", "error", "query"] : ["warn", "error"],
   });
 

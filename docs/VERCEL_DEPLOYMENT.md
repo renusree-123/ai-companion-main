@@ -40,7 +40,7 @@ In your Vercel Project Settings -> **Environment Variables**, add the following:
 
 | Variable Name | Example Value | Description |
 | --- | --- | --- |
-| `DATABASE_URL` | `postgresql://user:pass@ep-host.neon.tech/neondb?sslmode=require` | Remote PostgreSQL connection string |
+| `DATABASE_URL` | `postgresql://user:pass@ep-host-pooler.neon.tech/neondb?sslmode=require&connection_limit=15&pool_timeout=30` | Remote PostgreSQL connection string (use Pooled connection string from Neon/Supabase with connection_limit=15) |
 | `AUTH_SECRET` | `openssl rand -base64 48` generated secret | Minimum 16-character secure secret |
 | `GROQ_API_KEY` | `gsk_...` | Your Groq API key |
 | `AI_MODEL` | `groq/compound` | Default primary Groq model |
