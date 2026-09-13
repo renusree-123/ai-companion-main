@@ -42,16 +42,16 @@ export async function extractPdfText(
       disableFontFace: true,
     }).promise;
   } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
     logger.warn("pdf_extract_failed", {
       bytes: data.length,
-      error: error instanceof Error ? error.message : String(error),
+      error: detail,
     });
     throw new AppError(
       "BAD_REQUEST",
-      `This file could not be opened as a PDF: ${error instanceof Error ? error.message : String(error)}`,
+      `This file could not be opened as a PDF: ${detail}`,
       {
-        userMessage:
-          "This file could not be read as a PDF. It may be corrupt, or password protected.",
+        userMessage: `This file could not be read as a PDF (${detail}). If it is password protected, corrupt, or uses unsupported formatting, try saving/exporting it as a fresh PDF and try again.`,
       },
     );
   }
