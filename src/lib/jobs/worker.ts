@@ -190,6 +190,10 @@ const globalForWorker = globalThis as unknown as { ascWorker?: Worker };
 
 export function startInProcessWorker(): Worker | null {
   if (!env().WORKER_IN_PROCESS) return null;
+  // Serverless functions on Vercel execute background jobs on-demand via
+  // triggerBackgroundDrain() (using Next.js after()). Running a continuous
+  // polling loop in serverless instances exhausts database connection pools.
+  if (Boolean(process.env.VERCEL)) return null;
   if (globalForWorker.ascWorker) return globalForWorker.ascWorker;
   const worker = new Worker();
   worker.start();

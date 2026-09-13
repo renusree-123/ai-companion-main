@@ -46,7 +46,7 @@ In your Vercel Project Settings -> **Environment Variables**, add the following:
 | `AI_MODEL` | `groq/compound` | Default primary Groq model |
 | `AI_FALLBACK_MODEL` | `groq/compound-mini` | Fallback Groq model |
 | `AI_PROVIDER` | `groq` | Set to `groq` or `auto` |
-| `WORKER_IN_PROCESS` | `true` | Runs worker in web process |
+| `WORKER_IN_PROCESS` | `false` | Set to `false` on Vercel so background jobs run on-demand via `after()` without exhausting database connection pools |
 | `BLOB_READ_WRITE_TOKEN` | `vercel_blob_rw_...` | Vercel Blob storage read/write token (auto-created when connecting a Vercel Blob store) |
 
 > [!IMPORTANT]
