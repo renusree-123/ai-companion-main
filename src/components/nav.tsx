@@ -5,11 +5,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 const LINKS = [
-  { href: "/", label: "Home", exact: true },
-  { href: "/spaces", label: "Spaces" },
-  { href: "/flashcards", label: "Flashcards" },
-  { href: "/learning-hub", label: "Learning Hub" },
-  { href: "/analytics", label: "Analytics" },
+  { href: "/", label: "Home", icon: "🏠", exact: true },
+  { href: "/spaces", label: "Spaces", icon: "🗂️" },
+  { href: "/flashcards", label: "Flashcards", icon: "🧠" },
+  { href: "/learning-hub", label: "Learning Hub", icon: "🎓" },
+  { href: "/analytics", label: "Analytics", icon: "📊" },
 ];
 
 export function Nav({
@@ -33,13 +33,14 @@ export function Nav({
   }
 
   const links = [...LINKS];
-  if (user.role === "ADMIN") links.push({ href: "/admin", label: "Admin" });
+  if (user.role === "ADMIN") links.push({ href: "/admin", label: "Admin", icon: "🛠️" });
 
   return (
     <header
+      className="glass-surface animate-in-down"
       style={{
-        borderBottom: "1px solid var(--border)",
-        background: "var(--surface)",
+        borderWidth: "0 0 1px 0",
+        borderRadius: 0,
         position: "sticky",
         top: 0,
         zIndex: 30,
@@ -66,6 +67,9 @@ export function Nav({
               key={link.href}
               href={link.href}
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
                 padding: "6px 11px",
                 borderRadius: 7,
                 fontSize: 13,
@@ -73,8 +77,10 @@ export function Nav({
                 whiteSpace: "nowrap",
                 color: isActive(link.href, link.exact) ? "var(--text)" : "var(--text-muted)",
                 background: isActive(link.href, link.exact) ? "var(--surface-2)" : "transparent",
+                transition: "background 140ms ease, color 140ms ease",
               }}
             >
+              <span aria-hidden="true">{link.icon}</span>
               {link.label}
             </Link>
           ))}
@@ -112,12 +118,14 @@ export function Nav({
             onClick={() => setMenuOpen((open) => !open)}
             aria-expanded={menuOpen}
             aria-haspopup="menu"
+            className="btn-interactive"
             style={{
               width: 30,
               height: 30,
               borderRadius: 999,
               border: "1px solid var(--border-strong)",
-              background: "var(--surface-2)",
+              background: "linear-gradient(135deg, var(--accent), var(--accent-hover))",
+              color: "var(--accent-text)",
               cursor: "pointer",
               fontSize: 12,
               fontWeight: 640,
@@ -136,16 +144,14 @@ export function Nav({
               />
               <div
                 role="menu"
+                className="glass-surface animate-pop"
                 style={{
                   position: "absolute",
                   right: 0,
                   top: 38,
                   zIndex: 50,
                   minWidth: 208,
-                  background: "var(--surface)",
-                  border: "1px solid var(--border)",
                   borderRadius: 9,
-                  boxShadow: "var(--shadow)",
                   padding: 6,
                 }}
               >

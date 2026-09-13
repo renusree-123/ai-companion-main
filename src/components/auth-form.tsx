@@ -5,6 +5,19 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Alert, Button, Card, Field, inputStyle } from "./ui";
 
+const BRAND_STYLE = {
+  width: 46,
+  height: 46,
+  margin: "0 auto 12px",
+  borderRadius: 14,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: 21,
+  background: "linear-gradient(135deg, var(--accent), var(--accent-hover))",
+  boxShadow: "0 8px 24px -6px color-mix(in srgb, var(--accent) 60%, transparent)",
+} as const;
+
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -69,7 +82,10 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
   return (
     <>
-      <div style={{ textAlign: "center", marginBottom: 22 }}>
+      <div className="animate-in" style={{ textAlign: "center", marginBottom: 22 }}>
+        <div className="animate-pop" style={BRAND_STYLE}>
+          🎓
+        </div>
         <div style={{ fontSize: 22, fontWeight: 680, letterSpacing: "-0.025em" }}>
           AI Study Companion
         </div>
@@ -78,7 +94,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         </p>
       </div>
 
-      <Card padding={22}>
+      <Card padding={22} style={{ animationDelay: "60ms" }}>
         <h1 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 640 }}>
           {isRegister ? "Create your account" : "Sign in"}
         </h1>
@@ -132,7 +148,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             </div>
           ) : null}
 
-          <Button type="submit" disabled={pending} full>
+          <Button type="submit" disabled={pending} loading={pending} full>
             {pending ? "Please wait…" : isRegister ? "Create account" : "Sign in"}
           </Button>
         </form>
@@ -150,15 +166,15 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         </p>
       </Card>
 
-      <Card padding={16} style={{ marginTop: 14 }}>
+      <Card padding={16} style={{ marginTop: 14, animationDelay: "120ms" }}>
         <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 9 }}>
           Reviewing this project? Sign in with a seeded demo account.
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <Button variant="secondary" size="sm" onClick={() => demoLogin("learner")} disabled={pending} full>
+          <Button variant="secondary" size="sm" onClick={() => demoLogin("learner")} disabled={pending} loading={pending} full>
             Demo learner
           </Button>
-          <Button variant="secondary" size="sm" onClick={() => demoLogin("admin")} disabled={pending} full>
+          <Button variant="secondary" size="sm" onClick={() => demoLogin("admin")} disabled={pending} loading={pending} full>
             Demo admin
           </Button>
         </div>

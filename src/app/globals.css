@@ -35,6 +35,19 @@
   --shadow-sm: 0 1px 2px rgba(16, 16, 20, 0.06);
   --shadow: 0 2px 8px rgba(16, 16, 20, 0.07), 0 1px 2px rgba(16, 16, 20, 0.04);
   --radius: 10px;
+
+  /* Glassmorphism surface — translucent, blurred, with an ambient gradient
+     behind it to refract. Kept as tokens so Card/Nav/Auth stay in sync. */
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-bg-strong: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.55);
+  --glass-shadow: 0 8px 32px rgba(31, 38, 87, 0.10), 0 1px 2px rgba(31, 38, 87, 0.06);
+  --glass-shadow-hover: 0 14px 40px rgba(31, 38, 87, 0.14), 0 2px 4px rgba(31, 38, 87, 0.08);
+  --glass-blur: blur(18px) saturate(160%);
+  --ambient-gradient:
+    radial-gradient(1100px 620px at 8% -12%, rgba(79, 70, 229, 0.12), transparent 60%),
+    radial-gradient(900px 520px at 108% 8%, rgba(16, 185, 129, 0.09), transparent 55%),
+    radial-gradient(700px 500px at 50% 120%, rgba(244, 63, 94, 0.06), transparent 60%);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -60,6 +73,16 @@
     --info-soft: #12242f;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+
+    --glass-bg: rgba(24, 24, 28, 0.58);
+    --glass-bg-strong: rgba(24, 24, 28, 0.78);
+    --glass-border: rgba(255, 255, 255, 0.09);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --glass-shadow-hover: 0 16px 44px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.35);
+    --ambient-gradient:
+      radial-gradient(1100px 620px at 8% -12%, rgba(124, 116, 245, 0.20), transparent 60%),
+      radial-gradient(900px 520px at 108% 8%, rgba(74, 222, 128, 0.10), transparent 55%),
+      radial-gradient(700px 500px at 50% 120%, rgba(248, 113, 113, 0.08), transparent 60%);
   }
 }
 
@@ -83,6 +106,16 @@
   --danger-soft: #2d1717;
   --info: #6cc0ec;
   --info-soft: #12242f;
+
+  --glass-bg: rgba(24, 24, 28, 0.58);
+  --glass-bg-strong: rgba(24, 24, 28, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --glass-shadow-hover: 0 16px 44px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.35);
+  --ambient-gradient:
+    radial-gradient(1100px 620px at 8% -12%, rgba(124, 116, 245, 0.20), transparent 60%),
+    radial-gradient(900px 520px at 108% 8%, rgba(74, 222, 128, 0.10), transparent 55%),
+    radial-gradient(700px 500px at 50% 120%, rgba(248, 113, 113, 0.08), transparent 60%);
 }
 
 * {
@@ -96,7 +129,9 @@ body {
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: var(--ambient-gradient);
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font-sans);
   font-size: 14px;
@@ -239,4 +274,107 @@ select {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.25; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes float-orb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(24px, -28px) scale(1.06); }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/*
+ * Glassmorphism surface. Applied to Card and other frosted panels — a
+ * translucent, blurred background over the page's ambient gradient, with a
+ * gentle hover glow. Falls back to the plain surface colour when the
+ * browser cannot backdrop-filter.
+ */
+.glass-surface {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass-surface {
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+  }
+}
+
+.glass-card {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  animation: fade-in-up 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.glass-card:hover {
+  box-shadow: var(--glass-shadow-hover);
+  border-color: var(--border-strong);
+}
+
+.animate-in {
+  animation: fade-in-up 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-in-down {
+  animation: fade-in-down 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-pop {
+  animation: scale-in 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Interactive press/hover feel for buttons — layered on top of the inline
+   base colours, which never set :hover/:active so there's no conflict. */
+.btn-interactive {
+  transition: filter 140ms ease, transform 120ms ease, box-shadow 140ms ease, background-color 140ms ease, border-color 140ms ease;
+}
+.btn-interactive:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+.btn-interactive:active:not(:disabled) {
+  transform: translateY(0);
+  filter: brightness(0.97);
+}
+
+.spinner {
+  display: inline-block;
+  border-radius: 50%;
+  border-style: solid;
+  border-color: currentColor;
+  border-top-color: transparent;
+  opacity: 0.85;
+  animation: spin 0.7s linear infinite;
+}
+
+/* Decorative floating gradient orbs behind the auth card. */
+.auth-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  animation: float-orb 14s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
 }

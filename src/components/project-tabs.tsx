@@ -4,13 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const TABS = [
-  { slug: "", label: "Overview" },
-  { slug: "materials", label: "Materials" },
-  { slug: "tutor", label: "AI Tutor" },
-  { slug: "quiz", label: "Quiz" },
-  { slug: "flashcards", label: "Flashcards" },
-  { slug: "growth", label: "Growth" },
-  { slug: "analytics", label: "Analytics" },
+  { slug: "", label: "Overview", icon: "🧭" },
+  { slug: "materials", label: "Materials", icon: "📄" },
+  { slug: "tutor", label: "AI Tutor", icon: "🤖" },
+  { slug: "quiz", label: "Quiz", icon: "❓" },
+  { slug: "flashcards", label: "Flashcards", icon: "🧠" },
+  { slug: "growth", label: "Growth", icon: "📈" },
+  { slug: "analytics", label: "Analytics", icon: "📊" },
 ];
 
 export function ProjectTabs({ projectId }: { projectId: string }) {
@@ -34,6 +34,9 @@ export function ProjectTabs({ projectId }: { projectId: string }) {
             key={tab.slug}
             href={href}
             style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
               padding: "8px 13px",
               fontSize: 13,
               fontWeight: 545,
@@ -43,6 +46,7 @@ export function ProjectTabs({ projectId }: { projectId: string }) {
               marginBottom: -1,
             }}
           >
+            <span aria-hidden="true">{tab.icon}</span>
             {tab.label}
           </Link>
         );

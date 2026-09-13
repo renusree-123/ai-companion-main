@@ -17,13 +17,10 @@ export function Card({
 }) {
   return (
     <div
-      className={className}
+      className={["glass-surface glass-card", className].filter(Boolean).join(" ")}
       style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
         borderRadius: "var(--radius)",
         padding,
-        boxShadow: "var(--shadow-sm)",
         ...style,
       }}
     >
@@ -108,12 +105,28 @@ export function Badge({
   );
 }
 
+export function Spinner({ size = 14, style }: { size?: number; style?: CSSProperties }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="spinner"
+      style={{
+        width: size,
+        height: size,
+        borderWidth: Math.max(1.5, size / 8),
+        ...style,
+      }}
+    />
+  );
+}
+
 export function Button({
   children,
   variant = "primary",
   size = "md",
   type = "button",
   disabled,
+  loading,
   onClick,
   href,
   style,
@@ -125,6 +138,7 @@ export function Button({
   size?: "sm" | "md";
   type?: "button" | "submit";
   disabled?: boolean;
+  loading?: boolean;
   onClick?: () => void;
   href?: string;
   style?: CSSProperties;
@@ -132,39 +146,59 @@ export function Button({
   full?: boolean;
 }) {
   const palette: Record<string, CSSProperties> = {
-    primary: { background: "var(--accent)", color: "var(--accent-text)", border: "1px solid transparent" },
+    primary: {
+      background: "linear-gradient(135deg, var(--accent), var(--accent-hover))",
+      color: "var(--accent-text)",
+      border: "1px solid transparent",
+      boxShadow: "0 2px 10px -2px color-mix(in srgb, var(--accent) 55%, transparent)",
+    },
     secondary: { background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border-strong)" },
     ghost: { background: "transparent", color: "var(--text-muted)", border: "1px solid transparent" },
     danger: { background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid transparent" },
   };
+
+  const isDisabled = disabled || loading;
 
   const base: CSSProperties = {
     ...palette[variant],
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
+    gap: 7,
     borderRadius: 8,
     padding: size === "sm" ? "5px 11px" : "8px 15px",
     fontSize: size === "sm" ? 12.5 : 13.5,
     fontWeight: 560,
-    cursor: disabled ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.55 : 1,
+    cursor: isDisabled ? "not-allowed" : "pointer",
+    opacity: isDisabled ? 0.6 : 1,
     width: full ? "100%" : undefined,
-    transition: "background 120ms ease, border-color 120ms ease",
     ...style,
   };
 
-  if (href && !disabled) {
+  const content = (
+    <>
+      {loading ? <Spinner size={size === "sm" ? 12 : 13} /> : null}
+      {children}
+    </>
+  );
+
+  if (href && !isDisabled) {
     return (
-      <Link href={href} style={base} title={title}>
-        {children}
+      <Link href={href} className="btn-interactive" style={base} title={title}>
+        {content}
       </Link>
     );
   }
   return (
-    <button type={type} disabled={disabled} onClick={onClick} style={base} title={title}>
-      {children}
+    <button
+      type={type}
+      disabled={isDisabled}
+      onClick={onClick}
+      className="btn-interactive"
+      style={base}
+      title={title}
+    >
+      {content}
     </button>
   );
 }
