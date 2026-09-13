@@ -48,14 +48,24 @@ const RERANK_POOL = 12;
 /**
  * Minimum relevance a chunk must reach to be treated as evidence.
  *
- * Without a floor, BM25 returns *something* for any query that shares a single
- * common word with the corpus — so a question about sourdough bread would be
- * "answered" from a document about study technique because both contain the
- * word "make". Returning nothing is the correct behaviour when the project's
- * materials do not cover a topic; it is what lets the tutor refuse honestly
- * (PRD §20) instead of confabulating from irrelevant passages.
+ * Calibrated for the hashed-ngram embedding which produces lower similarity
+ * scores than neural models. The floor stops BM25 from returning a passage
+ * that shares only one common word with the query, while still allowing
+ * broad requests ("summarize", "key ideas") to surface material.
  */
-const MIN_RELEVANCE = 0.3;
+const MIN_RELEVANCE = 0.12;
+
+/**
+ * Meta/instructional words that signal a broad request about the document
+ * rather than a specific factual question. When *most* of the query is meta
+ * words, the strict relevance filter is relaxed.
+ */
+const META_WORDS = new Set([
+  "summarize", "summarise", "summary", "explain", "describe", "overview",
+  "key", "main", "ideas", "points", "concepts", "topics", "important",
+  "tell", "about", "latest", "uploaded", "file", "document", "material",
+  "resume", "review", "list", "what", "give", "show", "highlight",
+]);
 
 /**
  * Hybrid retrieval: BM25 lexical + hashed-vector cosine, fused with Reciprocal
@@ -99,6 +109,34 @@ export async function searchProject(options: SearchOptions): Promise<SearchResul
     await logRetrieval(options, { latencyMs: Date.now() - started, status: "EMPTY", chunks: [], candidates: 0, reranked: false });
     return { chunks: [], latencyMs: Date.now() - started, candidateCount: 0, reranked: false, strategy: "hybrid" };
   }
+
+  // --- Filename matching --------------------------------------------------
+  // When the user mentions a material by name ("summarize rishiksai_resume"),
+  // chunks from that material should always qualify regardless of term overlap.
+  const queryLower = options.query.toLowerCase();
+  const filenameMatchIds = new Set<string>();
+  const seenFilenames = new Set<string>();
+  for (const chunk of chunks) {
+    if (seenFilenames.has(chunk.materialId)) continue;
+    seenFilenames.add(chunk.materialId);
+    const stem = chunk.material.filename
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^a-zA-Z0-9]/g, " ")
+      .toLowerCase()
+      .trim();
+    const stemParts = stem.split(/\s+/).filter((p) => p.length > 2);
+    // Match if any meaningful part of the filename appears in the query.
+    if (stemParts.some((part) => queryLower.includes(part))) {
+      filenameMatchIds.add(chunk.materialId);
+    }
+  }
+
+  // --- Detect broad/meta queries ------------------------------------------
+  // A query like "summarize key ideas" is all meta words — the user wants
+  // document-level content, not a specific factual lookup. In this case we
+  // relax the relevance threshold so the top-scoring chunks are returned.
+  const contentTokens = queryTokens.filter((t) => !META_WORDS.has(t));
+  const isBroadQuery = contentTokens.length === 0 && queryTokens.length > 0;
 
   // --- BM25 ---------------------------------------------------------------
   const documentFrequency = new Map<string, number>();
@@ -158,6 +196,12 @@ export async function searchProject(options: SearchOptions): Promise<SearchResul
     // low-rank vote.
     const lexicalContribution = lexicalScores[i] > 0 ? 1 / (RRF_K + byLexical[i]) : 0;
     const vectorContribution = vectorScores[i] > 0.02 ? 1 / (RRF_K + byVector[i]) : 0;
+    let score = lexicalContribution + vectorContribution;
+
+    // Boost chunks from a filename-matched material so they always surface.
+    const isFilenameMatch = filenameMatchIds.has(chunk.materialId);
+    if (isFilenameMatch) score += 0.02;
+
     return {
       chunkId: chunk.id,
       materialId: chunk.materialId,
@@ -168,17 +212,38 @@ export async function searchProject(options: SearchOptions): Promise<SearchResul
       kind: chunk.kind,
       lexicalScore: lexicalScores[i],
       vectorScore: vectorScores[i],
-      score: lexicalContribution + vectorContribution,
-      // Either strong term coverage or strong vector similarity qualifies, so
-      // a paraphrased question is not rejected for using different words.
-      relevance: Math.max(coverage[i], vectorScores[i] * 1.25),
+      score,
+      // Either strong term coverage, strong vector similarity, or a filename
+      // match qualifies a chunk as relevant.
+      relevance: Math.max(
+        coverage[i],
+        vectorScores[i] * 1.25,
+        isFilenameMatch ? 1.0 : 0,
+      ),
     };
   });
 
-  const candidates = fused
+  // Apply the relevance floor. For broad/meta queries ("summarize key ideas")
+  // where the strict filter would return nothing, fall back to the top-scoring
+  // chunks so the tutor has *something* from the project's materials.
+  let candidates = fused
     .filter((c) => c.score > 0 && c.relevance >= MIN_RELEVANCE)
     .sort((a, b) => b.score - a.score)
     .slice(0, CANDIDATE_POOL);
+
+  if (candidates.length === 0 && (isBroadQuery || filenameMatchIds.size > 0)) {
+    // Broad-query fallback: return the best chunks by vector similarity, which
+    // captures topical relatedness even when there is zero lexical overlap.
+    candidates = fused
+      .filter((c) => c.score > 0 || c.vectorScore > 0)
+      .sort((a, b) => b.vectorScore - a.vectorScore || b.score - a.score)
+      .slice(0, limit);
+    logger.debug("retrieval_broad_fallback", {
+      projectId: options.projectId,
+      query: truncate(options.query, 100),
+      fallbackCount: candidates.length,
+    });
+  }
 
   if (candidates.length === 0) {
     await logRetrieval(options, { latencyMs: Date.now() - started, status: "EMPTY", chunks: [], candidates: 0, reranked: false });
