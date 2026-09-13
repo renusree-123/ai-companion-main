@@ -39,18 +39,24 @@ let testSchemaPath = schemaPath;
 
 if (schemaContent.includes('provider = "postgresql"')) {
   testSchemaPath = path.join(TEST_DIR, "schema.sqlite.prisma");
-  if (!existsSync(testSchemaPath)) {
-    const sqliteSchema = schemaContent.replace('provider = "postgresql"', 'provider = "sqlite"');
-    writeFileSync(testSchemaPath, sqliteSchema, "utf-8");
-    try {
-      execSync(`npx prisma generate --schema="${testSchemaPath}"`, { stdio: "pipe" });
-    } catch {
-      // Ignore parallel generation error if another worker generated it
-    }
+  const sqliteSchema = schemaContent.replace('provider = "postgresql"', 'provider = "sqlite"');
+  writeFileSync(testSchemaPath, sqliteSchema, "utf-8");
+  try {
+    execSync(`npx prisma generate --schema="${testSchemaPath}"`, { stdio: "pipe" });
+  } catch {
+    // Ignore parallel generation error
   }
 }
 
-execSync(`npx prisma db push --schema="${testSchemaPath}" --skip-generate --accept-data-loss`, {
-  stdio: "pipe",
-  env: process.env,
-});
+const dbPushedFlag = path.join(TEST_DIR, ".db-pushed");
+if (!existsSync(dbPushedFlag)) {
+  try {
+    execSync(`npx prisma db push --schema="${testSchemaPath}" --skip-generate --accept-data-loss`, {
+      stdio: "pipe",
+      env: process.env,
+    });
+    writeFileSync(dbPushedFlag, "ok", "utf-8");
+  } catch {
+    // Ignore if another parallel thread pushed it
+  }
+}

@@ -15,11 +15,16 @@ function configureDatasourceUrl(): string | undefined {
     const parsed = new URL(url);
     let modified = false;
     if (!parsed.searchParams.has("connection_limit")) {
-      parsed.searchParams.set("connection_limit", "15");
+      const defaultLimit = process.env.VERCEL ? "3" : "15";
+      parsed.searchParams.set("connection_limit", defaultLimit);
       modified = true;
     }
     if (!parsed.searchParams.has("pool_timeout")) {
       parsed.searchParams.set("pool_timeout", "30");
+      modified = true;
+    }
+    if (!parsed.searchParams.has("connect_timeout")) {
+      parsed.searchParams.set("connect_timeout", "15");
       modified = true;
     }
     return modified ? parsed.toString() : undefined;

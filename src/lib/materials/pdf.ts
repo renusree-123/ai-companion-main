@@ -1,7 +1,8 @@
-// Static ESM import: pdfjs-dist ships an ESM-only legacy build. A dynamic
-// import() breaks under tsx (the worker's runtime), which rewrites it into a
-// data:-URL require that cannot resolve a bare specifier.
+// Static ESM import: pdfjs-dist ships an ESM-only legacy build. Importing both
+// pdf.mjs and pdf.worker.mjs ensures bundlers (Webpack/Turbopack) include the worker
+// module in serverless deployment bundles (Vercel Lambdas).
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+import "pdfjs-dist/legacy/build/pdf.worker.mjs";
 import { logger } from "../logger";
 import { AppError } from "../errors";
 import type { PageText } from "../retrieval/chunking";
